@@ -123,11 +123,88 @@ Accepts a name, fetches enriched profile data, and stores the result.
 {
   "status": "success",
   "message": "Profile already exists",
-  "data": { ... }
+  "data": { "...existing profile..." }
 }
 ```
 
-**Error response**
+---
+
+### `GET /api/profiles`
+
+Returns all profiles. Supports optional case-insensitive query filters.
+
+**Query parameters**
+
+| Parameter | Type | Example |
+|-----------|------|---------|
+| `gender` | string | `?gender=male` |
+| `country_id` | string | `?country_id=NG` |
+| `age_group` | string | `?age_group=adult` |
+
+**Success response (200)**
+
+```json
+{
+  "status": "success",
+  "count": 2,
+  "data": [
+    {
+      "id": "id-1",
+      "name": "emmanuel",
+      "gender": "male",
+      "age": 25,
+      "age_group": "adult",
+      "country_id": "NG"
+    },
+    {
+      "id": "id-2",
+      "name": "sarah",
+      "gender": "female",
+      "age": 28,
+      "age_group": "adult",
+      "country_id": "US"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /api/profiles/{id}`
+
+Returns a single profile by UUID.
+
+**Success response (200)**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "id": "b3f9c1e2-7d4a-4c91-9c2a-1f0a8e5b6d12",
+    "name": "emmanuel",
+    "gender": "male",
+    "gender_probability": 0.99,
+    "sample_size": 1234,
+    "age": 25,
+    "age_group": "adult",
+    "country_id": "NG",
+    "country_probability": 0.85,
+    "created_at": "2026-04-01T12:00:00Z"
+  }
+}
+```
+
+---
+
+### `DELETE /api/profiles/{id}`
+
+Deletes a profile by UUID. Returns `204 No Content` on success.
+
+---
+
+## Error Responses
+
+All errors follow this structure:
 
 ```json
 { "status": "error", "message": "<error message>" }
@@ -137,8 +214,11 @@ Accepts a name, fetches enriched profile data, and stores the result.
 |-------------|--------|
 | 400 | Missing or empty `name` |
 | 422 | `name` is not a string |
+| 404 | Profile not found |
 | 502 | External API returned unusable data |
 | 500 | Unexpected server error |
+
+---
 
 ## Age Group Classification
 

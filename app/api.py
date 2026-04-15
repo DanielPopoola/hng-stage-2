@@ -1,5 +1,7 @@
 from typing import Annotated
 
+
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -31,8 +33,8 @@ async def create_profile_endpoint(
     try:
         enriched_data = await enrich_profile_data(request.name)
         profile, is_new = create_profile(request.name, enriched_data, db)
-    except ValueError as e:
-        raise HTTPException(status_code=502, detail=str(e))
+    except (ValueError, httpx.HTTPStatusError) as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
 
     data = ProfileResponse.model_validate(profile)
 

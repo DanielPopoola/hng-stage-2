@@ -46,7 +46,7 @@ async def enrich_profile_data(name: str) -> dict:
         "country_probability": top_country["probability"],
     }
     
-async def create_profile(name: str, enriched_data: dict, db: Session) -> tuple[Profiles, bool]:
+def create_profile(name: str, enriched_data: dict, db: Session) -> tuple[Profiles, bool]:
     stmt = select(Profiles).where(Profiles.name == name)
     existing = db.execute(stmt).scalar_one_or_none()
 

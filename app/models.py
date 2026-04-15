@@ -49,6 +49,8 @@ class ProfileResponse(BaseModel):
 
 
 class ProfileListItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: str
     name: str
     gender: str
@@ -56,5 +58,3 @@ class ProfileListItem(BaseModel):
     age_group: AgeGroup
     country_id: str
 
-    class Config:
-        from_attributes = True
