@@ -1,8 +1,7 @@
-from typing import Annotated
-
+from typing import Annotated, Literal
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -21,6 +20,20 @@ router = APIRouter()
 
 class ProfileRequest(BaseModel):
     name: str
+
+
+class ProfileQuery(BaseModel):
+    gender: str | None = None
+    country_id: str | None = None
+    age_group: AgeGroup | None = None
+    min_age: int | None = None
+    max_age: int | None = None
+    min_gender_probability: float | None = None
+    min_country_probability: float | None = None
+    sort_by: Literal["age", "created_at", "gender_probability"] | None = None
+    order: Literal["asc", "desc"] | None = None
+    limit: int = Query(default=10, ge=1, le=50)
+    page: int = Query(default=1, ge=1)
 
 
 @router.post("/api/profiles", status_code=201)
@@ -54,24 +67,16 @@ async def create_profile_endpoint(
 
 @router.get("/api/profiles")
 def list_profiles_endpoint(
-    db: Annotated[Session, Depends(get_db)],
-    gender: str | None = None,
-    country_id: str | None = None,
-    age_group: AgeGroup | None = None,
+    db: Annotated[Session, Depends(get_db)], query: Annotated[ProfileQuery, Query()]
 ):
-    profiles = get_profiles(
-        db,
-        gender=gender,
-        country_id=country_id,
-        age_group=age_group,
-    )
-
-    data = [ProfileListItem.model_validate(p) for p in profiles]
+    result = get_profiles(db, **query.model_dump())
 
     return {
         "status": "success",
-        "count": len(data),
-        "data": data,
+        "page": result["page"],
+        "limit": result["limit"],
+        "total": result["total"],
+        "data": [ProfileListItem.model_validate(p) for p in result["data"]],
     }
 
 

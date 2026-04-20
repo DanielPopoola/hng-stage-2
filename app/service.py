@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from typing import Literal
 import asyncio
 
 from .models import AgeGroup, Profiles
@@ -38,7 +38,6 @@ async def enrich_profile_data(name: str) -> dict:
     return {
         "gender": gender_data["gender"],
         "gender_probability": gender_data["probability"],
-        "sample_size": gender_data["count"],
         "age": age_data["age"],
         "age_group": age_class,
         "country_id": top_country["country_id"],
@@ -75,8 +74,21 @@ def get_profiles(
     gender: str | None = None,
     country_id: str | None = None,
     age_group: AgeGroup | None = None,
-) -> Sequence[Profiles]:
+    min_age: int | None = None,
+    max_age: int | None = None,
+    min_gender_probability: float | None = None,
+    min_country_probability: float | None = None,
+    sort_by: Literal["age", "created_at", "gender_probability"] | None = None,
+    order: Literal["asc", "desc"] | None = None,
+    page: int = 1,
+    limit: int = 10,
+) -> dict:
     stmt = select(Profiles)
+    sort_column = {
+        "age": Profiles.age,
+        "created_at": Profiles.created_at,
+        "gender_probability": Profiles.gender_probability,
+    }
 
     if gender:
         stmt = stmt.where(func.lower(Profiles.gender) == gender.lower())
@@ -87,8 +99,34 @@ def get_profiles(
     if age_group:
         stmt = stmt.where(Profiles.age_group == age_group)
 
-    result = db.execute(stmt).scalars().all()
-    return result
+    if min_age is not None:
+        stmt = stmt.where(Profiles.age >= min_age)
+
+    if max_age is not None:
+        stmt = stmt.where(Profiles.age <= max_age)
+
+    if min_gender_probability is not None:
+        stmt = stmt.where(Profiles.gender_probability >= min_gender_probability)
+
+    if min_country_probability is not None:
+        stmt = stmt.where(Profiles.country_probability >= min_country_probability)
+
+    if sort_by and sort_by in sort_column:
+        col = sort_column[sort_by]
+        stmt = stmt.order_by(col.desc() if order == "desc" else col.asc())
+
+    count_stmt = select(func.count()).select_from(stmt.subquery())
+    total = db.execute(count_stmt).scalar()
+
+    stmt = stmt.limit(limit).offset((page - 1) * limit)
+    data = db.execute(stmt).scalars().all()
+
+    return {
+        "page": page,
+        "limit": limit,
+        "total": total,
+        "data": data,
+    }
 
 
 def delete_profile(id: str, db: Session) -> bool:
