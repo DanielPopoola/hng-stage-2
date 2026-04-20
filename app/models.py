@@ -49,10 +49,10 @@ class ProfileResponse(BaseModel):
     name: str
     gender: str
     gender_probability: float
-    sample_size: int
     age: int
     age_group: AgeGroup
     country_id: str
+    country_name: str
     country_probability: float
     created_at: datetime
 

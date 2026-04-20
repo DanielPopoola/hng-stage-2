@@ -29,7 +29,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=422,
-        content={"status": "error", "message": "Invalid request body"},
+        content={"status": "error", "message": "Invalid query parameters"},
     )
 
 
