@@ -13,7 +13,8 @@ from .service import (
     get_profiles,
     delete_profile,
 )
-from .models import ProfileResponse, ProfileListItem, AgeGroup
+from .models import ProfileResponse, ProfileListItem, AgeGroup, Gender
+from .parser import parse_query
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ class ProfileRequest(BaseModel):
 
 
 class ProfileQuery(BaseModel):
-    gender: str | None = None
+    gender: Gender | None = None
     country_id: str | None = None
     age_group: AgeGroup | None = None
     min_age: int | None = None
@@ -70,6 +71,32 @@ def list_profiles_endpoint(
     db: Annotated[Session, Depends(get_db)], query: Annotated[ProfileQuery, Query()]
 ):
     result = get_profiles(db, **query.model_dump())
+
+    return {
+        "status": "success",
+        "page": result["page"],
+        "limit": result["limit"],
+        "total": result["total"],
+        "data": [ProfileListItem.model_validate(p) for p in result["data"]],
+    }
+
+
+@router.get("/api/profiles/search")
+def search_profiles(
+    db: Annotated[Session, Depends(get_db)],
+    q: str = Query(..., description="Natural language query"),
+    page: int = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1, le=50),
+):
+    filters = parse_query(q)
+
+    if not q.strip():
+        raise HTTPException(status_code=400, detail="Invalid query parameters")
+
+    if not filters:
+        raise HTTPException(status_code=422, detail="Unable to interpret query")
+
+    result = get_profiles(db, page=page, limit=limit, **filters)
 
     return {
         "status": "success",

@@ -1,7 +1,7 @@
 from typing import Literal
 import asyncio
 
-from .models import AgeGroup, Profiles
+from .models import AgeGroup, Profiles, Gender
 from .clients import get_age, get_gender, get_nationality
 
 from sqlalchemy.orm import Session
@@ -71,7 +71,7 @@ def get_profile(id: str, db: Session) -> Profiles | None:
 
 def get_profiles(
     db: Session,
-    gender: str | None = None,
+    gender: Gender | None = None,
     country_id: str | None = None,
     age_group: AgeGroup | None = None,
     min_age: int | None = None,

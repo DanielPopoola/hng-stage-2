@@ -11,6 +11,11 @@ from sqlalchemy.orm import Mapped, mapped_column
 from .database import Base
 
 
+class Gender(StrEnum):
+    MALE = "male"
+    FEMALE = "female"
+
+
 class AgeGroup(StrEnum):
     CHILD = "child"
     TEENAGER = "teenager"
@@ -25,7 +30,7 @@ class Profiles(Base):
         default=lambda: str(uuid6.uuid7()), primary_key=True
     )
     name: Mapped[str] = mapped_column(String, unique=True)
-    gender: Mapped[str] = mapped_column(String)
+    gender: Mapped[str] = mapped_column(SQLEnum(Gender))
     gender_probability: Mapped[float] = mapped_column(Float)
     age: Mapped[int] = mapped_column(Integer)
     age_group: Mapped[str] = mapped_column(SQLEnum(AgeGroup))
