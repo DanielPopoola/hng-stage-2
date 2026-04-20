@@ -1,0 +1,96 @@
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime, UTC
+
+from app.database import Base
+from app.models import Profiles
+
+engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine)
+
+TEST_PROFILES = [
+    {
+        "id": "01900000-0000-7000-8000-000000000001",
+        "name": "Kwame Mensah",
+        "gender": "male",
+        "gender_probability": 0.95,
+        "age": 25,
+        "age_group": "adult",
+        "country_id": "NG",
+        "country_name": "Nigeria",
+        "country_probability": 0.85,
+        "created_at": datetime.now(UTC),
+    },
+    {
+        "id": "01900000-0000-7000-8000-000000000002",
+        "name": "Amina Diallo",
+        "gender": "female",
+        "gender_probability": 0.91,
+        "age": 17,
+        "age_group": "teenager",
+        "country_id": "KE",
+        "country_name": "Kenya",
+        "country_probability": 0.78,
+        "created_at": datetime.now(UTC),
+    },
+    {
+        "id": "01900000-0000-7000-8000-000000000003",
+        "name": "Chidi Okafor",
+        "gender": "male",
+        "gender_probability": 0.60,
+        "age": 8,
+        "age_group": "child",
+        "country_id": "NG",
+        "country_name": "Nigeria",
+        "country_probability": 0.90,
+        "created_at": datetime.now(UTC),
+    },
+    {
+        "id": "01900000-0000-7000-8000-000000000004",
+        "name": "Fatima Nkosi",
+        "gender": "female",
+        "gender_probability": 0.88,
+        "age": 65,
+        "age_group": "senior",
+        "country_id": "ZA",
+        "country_name": "South Africa",
+        "country_probability": 0.72,
+        "created_at": datetime.now(UTC),
+    },
+    {
+        "id": "01900000-0000-7000-8000-000000000005",
+        "name": "Emeka Eze",
+        "gender": "male",
+        "gender_probability": 0.97,
+        "age": 34,
+        "age_group": "adult",
+        "country_id": "GH",
+        "country_name": "Ghana",
+        "country_probability": 0.65,
+        "created_at": datetime.now(UTC),
+    },
+    {
+        "id": "01900000-0000-7000-8000-000000000006",
+        "name": "Ngozi Adeyemi",
+        "gender": "female",
+        "gender_probability": 0.93,
+        "age": 42,
+        "age_group": "adult",
+        "country_id": "NG",
+        "country_name": "Nigeria",
+        "country_probability": 0.88,
+        "created_at": datetime.now(UTC),
+    },
+]
+
+
+@pytest.fixture(scope="session")
+def db():
+    Base.metadata.create_all(bind=engine)
+    session = SessionLocal()
+    session.bulk_insert_mappings(Profiles, TEST_PROFILES)
+    session.commit()
+    yield session
+    session.close()
+    Base.metadata.drop_all(bind=engine)
